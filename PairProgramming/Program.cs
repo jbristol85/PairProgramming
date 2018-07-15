@@ -1,94 +1,97 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PairProgramming
 {
-    class Program
+    abstract class Program
     {
         public class BankAccount
         {
             public int AccountNumber { get; set; }
             public string AccountOwner { get; set; }
-            public double AccountTotal { get; set; }
-            public string AccountType { get; set; }
-            public BankAccount(int accountNumber, string accountOwner, double accountTotal, string accountType)
-            {
-                AccountNumber = accountNumber;
-                AccountOwner = accountOwner;
-                AccountTotal = accountTotal;
-                AccountType = accountType;
-            }
-
+            protected double AccountTotal { get; set; }
+            public TransactionQueue BankTransaction { get; set; }
            
-            public void BankAccountTransaction(double transactionAmount)
+            public void ApplyTransaction(Transaction transaction)
             {
-                var totalTransaction = AccountTotal + transactionAmount;
-                AccountTotal = totalTransaction;
-
+                AccountTotal += transaction.TransactionAmount;
             }
-
+          
+          
         }
 
         public class SavingsAccount : BankAccount
         {
             public double SavingsInterest { get; set; }
 
-            public void SavingsInterestTransaction(double savingsInterest)
+            public void SavingsInterestTransaction(double savingsInterest, DateTime transactionDateTime, string BankName)
             {
-                var interestTransaction = AccountTotal + (AccountTotal + savingsInterest);
-                AccountTotal = interestTransaction;
+                transactionDateTime = DateTime.Now;
+                var interestTransaction = AccountTotal * savingsInterest;
+                var chargeInterest = new Transaction(interestTransaction, transactionDateTime, BankName );
+               BankTransaction.Enqueue(chargeInterest);
             }
+
+            
         }
 
         public class CheckingAccount : BankAccount
         {
             public double CheckingServiceFee { get; set; }
 
-            public void checkingServiceFeeTransaction(double checkingServiceFee)
+            public void CheckingServiceFeeTransaction(double TransactionAmount, DateTime TransactionDateTime, string BankName )
             {
-                var serviceFeeTransaction = AccountTotal - checkingServiceFee;
-                AccountTotal = serviceFeeTransaction;
-            }
-        }
+                TransactionDateTime = DateTime.Now;
+                var chargeFee = new Transaction(TransactionAmount, TransactionDateTime, BankName );
 
-        public class Transactions : BankAccount
+                BankTransaction.Enqueue(chargeFee);
+            }
+
+            }
+
+        public class Transaction
         {
             public double TransactionAmount { get; set; }
             public DateTime TransactionDateTime { get; set; }
-            public double TransactionAccountNumber { get; set; }
+            public string BankName { get; set; }
 
-
-            class TransactionQueue
+            public Transaction(double transactionAmount, DateTime transactionDateTime,string bankName )
             {
-                List<Array> _queue = new List<Array>();
-
-                void enqueue(Array transactionData)
-                {
-                    _queue.Add(transactionData);
-                }
-
-                Array dequeue()
-                {
-                    var firstTransaction = _queue[0];
-                    _queue.RemoveAt(0);
-                    return firstTransaction;
-                }
+                this.TransactionAmount = transactionAmount;
+                this.TransactionDateTime = transactionDateTime;
+                this.BankName = bankName;
             }
+
+
+        }
+
+        public abstract class TransactionQueue
+        {
+            private List<Transaction> queue;
+
+            public void Enqueue(Transaction newTrans)
+            {
+                queue.Add(newTrans);
+            }
+
+            public Transaction Dequeue(string r)
+            {
+                var firstTransaction = queue[0];
+                queue.RemoveAt(0);
+                return firstTransaction;
+            }
+
+
         }
 
         static void Main(string[] args)
         {
-            var bankAccount1 = new BankAccount
-            {
-                AccountNumber = 123456,
-                AccountOwner = "Josh",
-                AccountTotal = 1000.00,
-                AccountType = "Checking"
-            };
-
+       
         }
     }
 }
